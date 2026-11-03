@@ -25,7 +25,7 @@ Paths follow OpenCode: `OPENCODE_DB` overrides the database (a relative path res
 ## Install
 
 ```bash
-paseo plugin install /path/to/opencode-usage
+paseo plugin install git:WU-Jiayang/paseo-opencode-usage
 ```
 
 Requires Paseo 0.14 or newer on the daemon, and Node 22.5 or newer for the database reader.
@@ -39,6 +39,12 @@ npm run typecheck
 ```
 
 The plugin has no runtime dependencies. Paseo provides the plugin SDK and zod at runtime.
+
+## Publish to the Paseo registry
+
+The registry lists plugins from reviewed Git repositories. Submit this repository through the
+[plugin submission form](https://github.com/getpaseo/plugins/issues/new?template=submit-plugin.yml)
+with the source URL and the categories it belongs to.
 
 ## Layout
 
