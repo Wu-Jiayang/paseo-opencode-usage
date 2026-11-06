@@ -12,7 +12,15 @@ OpenChamber shows the same numbers in its session panel. This plugin brings them
 | MiniMax Coding Plan | OpenCode's `minimax-coding-plan` / `minimax-cn-coding-plan` credential | interval window, weekly window when the plan has one |
 | DeepSeek | OpenCode's `deepseek` credential | remaining balance |
 
-Every source shows up in Settings → Usage as its own card, and the same numbers feed the usage meter in the composer.
+Every source shows up in Settings → Usage as its own card.
+
+## The live sidebar row
+
+The Usage page reads Paseo's own usage report cache, which the daemon holds for five minutes. The plugin also adds a sidebar footer row that polls the providers through its own RPC, so its numbers move faster than that cache.
+
+The row shows the window closest to its limit for each provider, and opens a popover with every window, the reset countdown and the balances. The interval is set in Settings → Plugins → OpenCode usage: 15 seconds, 30 seconds (default), a minute, or five minutes. The plugin keeps a ten-second shared reading on the daemon, so several clients polling at once cost one request.
+
+The Usage page itself keeps Paseo's five-minute cache. Nothing a plugin does can shorten it.
 
 ## Credentials
 
@@ -34,7 +42,7 @@ Requires Paseo 0.14 or newer on the daemon, and Node 22.5 or newer for the datab
 
 ```bash
 npm install
-npm test          # vitest, 13 cases
+npm test          # vitest, 15 cases
 npm run typecheck
 ```
 
@@ -49,11 +57,17 @@ with the source URL and the categories it belongs to.
 ## Layout
 
 ```
-index.server.ts        registers the three usage sources
+index.server.ts            registers the usage sources, the settings and the live RPC
+index.client.tsx           registers the sidebar row and the settings screen
 server/opencode-store.ts   reads the OpenCode database and the v1 file
-server/accounts.ts     turns credentials into usage accounts
-server/codex.ts        ChatGPT usage endpoint
-server/minimax.ts      MiniMax token plan endpoint
-server/deepseek.ts     DeepSeek balance endpoint
-shared/input.ts        the discovery input schema
+server/accounts.ts         turns credentials into usage accounts
+server/codex.ts            ChatGPT usage endpoint
+server/minimax.ts          MiniMax token plan endpoint
+server/deepseek.ts         DeepSeek balance endpoint
+server/live.ts             the live reading behind the sidebar row
+client/live.tsx            the sidebar row and its popover
+client/settings.tsx        the refresh interval setting
+shared/input.ts            the discovery input schema
+shared/live.ts              the live RPC contract
+shared/preferences.ts       the plugin settings
 ```
