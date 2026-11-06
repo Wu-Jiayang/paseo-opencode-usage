@@ -1,9 +1,12 @@
 import type { PluginServerContext } from "@getpaseo/plugin/server";
 import { credentialInputSchema } from "./shared/input.js";
+import { liveUsageRpc } from "./shared/live.js";
+import { preferences } from "./shared/preferences.js";
 import { discoverAccounts } from "./server/accounts.js";
 import { fetchCodexUsage } from "./server/codex.js";
 import { fetchMinimaxUsage } from "./server/minimax.js";
 import { fetchDeepseekUsage } from "./server/deepseek.js";
+import { readLiveUsage } from "./server/live.js";
 
 export default function contribute(server: PluginServerContext) {
   server.registerUsageSource({
@@ -28,5 +31,7 @@ export default function contribute(server: PluginServerContext) {
     discover: (scope) => discoverAccounts(["deepseek"], scope),
     fetch: fetchDeepseekUsage,
   });
+  server.registerSettings(preferences);
+  server.handle(liveUsageRpc, () => readLiveUsage());
   return () => {};
 }
