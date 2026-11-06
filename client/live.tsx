@@ -59,7 +59,7 @@ export function useLiveUsage() {
   const getLive = useRpc(liveUsageRpc);
   const settings = useSettings(preferences);
   const ready = settings.status === "ready";
-  const refreshSeconds = ready ? settings.values.refreshSeconds : 30;
+  const refreshSeconds = ready ? settings.values.refreshSeconds : 180;
   const enabled = ready ? settings.values.showInFooter : true;
   return useQuery({
     queryKey: ["opencode-usage", "live"],

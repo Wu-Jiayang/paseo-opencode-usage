@@ -18,7 +18,7 @@ Every source shows up in Settings → Usage as its own card.
 
 The Usage page reads Paseo's own usage report cache, which the daemon holds for five minutes. The plugin also adds a sidebar footer row that polls the providers through its own RPC, so its numbers move faster than that cache.
 
-The row shows the window closest to its limit for each provider, and opens a popover with every window, the reset countdown and the balances. The interval is set in Settings → Plugins → OpenCode usage: 15 seconds, 30 seconds (default), a minute, or five minutes. The plugin keeps a ten-second shared reading on the daemon, so several clients polling at once cost one request.
+The row shows the window closest to its limit for each provider, and opens a popover with every window, the reset countdown and the balances. The interval is set in Settings → Plugins → OpenCode usage: 15 seconds, 30 seconds, a minute, three minutes (default), or five minutes. The plugin keeps a ten-second shared reading on the daemon, so several clients polling at once cost one request.
 
 The Usage page itself keeps Paseo's five-minute cache. Nothing a plugin does can shorten it.
 

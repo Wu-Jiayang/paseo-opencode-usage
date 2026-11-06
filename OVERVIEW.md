@@ -14,7 +14,7 @@ OpenCode v2 keeps every provider credential in its own database. The plugin read
 
 The Usage page reads Paseo's own usage report cache, which the daemon holds for five minutes. The plugin adds a sidebar footer row that polls the providers through its own RPC, so its numbers move faster than that cache. The row shows the window closest to its limit for each provider and opens a popover with every window, the reset countdown and the balances.
 
-The refresh interval is set in the plugin settings: 15 seconds, 30 seconds (default), a minute, or five minutes. A ten-second shared reading on the daemon keeps several clients polling from turning into several requests.
+The refresh interval is set in the plugin settings: 15 seconds, 30 seconds, a minute, three minutes (default), or five minutes. A ten-second shared reading on the daemon keeps several clients polling from turning into several requests.
 
 The Usage page keeps Paseo's five-minute cache. A plugin cannot shorten it.
 

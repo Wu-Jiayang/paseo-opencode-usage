@@ -14,6 +14,7 @@ const REFRESH_OPTIONS = [
   { value: "15", label: "Every 15 seconds" },
   { value: "30", label: "Every 30 seconds" },
   { value: "60", label: "Every minute" },
+  { value: "180", label: "Every 3 minutes" },
   { value: "300", label: "Every 5 minutes" },
 ];
 
