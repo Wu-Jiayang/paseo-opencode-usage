@@ -2,13 +2,14 @@ import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { fetchMinimaxUsage } from "./minimax.js";
+import { fetchMinimaxUsage, resetMinimaxWindowDurations } from "./minimax.js";
 import { fetchDeepseekUsage } from "./deepseek.js";
 
 let home: string;
 
 beforeEach(async () => {
   home = await mkdtemp(join(tmpdir(), "opencode-minimax-"));
+  resetMinimaxWindowDurations();
 });
 
 afterEach(async () => {
@@ -96,4 +97,39 @@ test("reports the DeepSeek balance", async () => {
     status: "available",
     balances: [{ id: "balance", remaining: 27.32, unit: "credits" }],
   });
+});
+
+test("the window keeps the length the plan gives it", async () => {
+  const input = await writeStore(
+    { type: "api", key: "fixture-key" },
+    "minimax-cn-coding-plan",
+  );
+
+  const read = async (start: number, end: number) => {
+    const report = await fetchMinimaxUsage(
+      input,
+      async () =>
+        Response.json({
+          model_remains: [
+            {
+              model_name: "general",
+              start_time: start,
+              end_time: end,
+              current_interval_status: 1,
+              current_interval_remaining_percent: 50,
+              current_weekly_status: 3,
+            },
+          ],
+        }),
+      { HOME: home },
+    );
+    if (report.status !== "available") throw new Error("expected a report");
+    return report.windows[0]?.label ?? "";
+  };
+
+  // A window that has been running reports less time than it has.
+  expect(await read(0, 4 * 3_600_000)).toBe("4-hour");
+  // The plan's window is five hours; once seen, that is the name it keeps.
+  expect(await read(0, 5 * 3_600_000)).toBe("5-hour");
+  expect(await read(0, 4 * 3_600_000)).toBe("5-hour");
 });

@@ -64,6 +64,36 @@ function pickEntry(entries: ModelRemains[]): ModelRemains | null {
   return withPercent ?? entries[0] ?? null;
 }
 
+/**
+ * The length the provider reports for a window shrinks as the window runs,
+ * but the plan's window has a fixed length: the longest length seen for a
+ * window is the one that names it, so the label does not drift from "5-hour"
+ * to "4-hour" while the window is running.
+ */
+const windowDurations = new Map<string, number>();
+
+function durationHint(key: string, observed: number | null): number | null {
+  const known = windowDurations.get(key);
+  if (observed !== null && Number.isFinite(observed) && observed > 0) {
+    if (known === undefined || observed > known) windowDurations.set(key, observed);
+    return windowDurations.get(key) ?? observed;
+  }
+  return known ?? null;
+}
+
+/** The span between two epoch milliseconds, in seconds. */
+function span(startTime: number | undefined, endTime: number | undefined): number | null {
+  if (startTime === undefined || endTime === undefined) return null;
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) return null;
+  if (endTime <= startTime) return null;
+  return Math.floor((endTime - startTime) / 1000);
+}
+
+/** Test seam: forgets the observed window lengths. */
+export function resetMinimaxWindowDurations(): void {
+  windowDurations.clear();
+}
+
 function windowFromRemains(input: {
   id: string;
   label: string;
@@ -124,10 +154,10 @@ export async function fetchMinimaxUsage(
         startTime: entry.start_time,
         endTime: entry.end_time,
         remainsTime: entry.remains_time,
-        durationSeconds:
-          entry.start_time && entry.end_time && entry.end_time > entry.start_time
-            ? Math.floor((entry.end_time - entry.start_time) / 1000)
-            : null,
+        durationSeconds: durationHint(
+          `${input.integration}:interval`,
+          span(entry.start_time, entry.end_time),
+        ),
         resetsAt: resetAt(entry.end_time, entry.remains_time),
       }),
     );
@@ -146,12 +176,10 @@ export async function fetchMinimaxUsage(
         startTime: entry.weekly_start_time,
         endTime: entry.weekly_end_time,
         remainsTime: entry.weekly_remains_time,
-        durationSeconds:
-          entry.weekly_start_time &&
-          entry.weekly_end_time &&
-          entry.weekly_end_time > entry.weekly_start_time
-            ? Math.floor((entry.weekly_end_time - entry.weekly_start_time) / 1000)
-            : null,
+        durationSeconds: durationHint(
+          `${input.integration}:weekly`,
+          span(entry.weekly_start_time, entry.weekly_end_time),
+        ),
         resetsAt: resetAt(entry.weekly_end_time, entry.weekly_remains_time),
       }),
     );

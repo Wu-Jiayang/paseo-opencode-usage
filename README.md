@@ -49,7 +49,7 @@ Requires Paseo 0.14 or newer on the daemon, and Node 22.5 or newer for the datab
 
 ```bash
 npm install
-npm test          # vitest, 21 cases
+npm test          # vitest, 22 cases
 npm run typecheck
 ```
 
