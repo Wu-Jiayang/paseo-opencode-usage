@@ -18,6 +18,11 @@ const REFRESH_OPTIONS = [
   { value: "300", label: "Every 5 minutes" },
 ];
 
+const LAYOUT_OPTIONS = [
+  { value: "detailed", label: "Detailed (a line per provider)" },
+  { value: "compact", label: "Compact (one line)" },
+];
+
 export function makeSettingsScreen(): ComponentType<PluginSurfaceProps> {
   return function OpenCodeUsageSettings({ theme }: PluginSurfaceProps) {
     const settings = useSettings(preferences);
@@ -53,7 +58,16 @@ export function makeSettingsScreen(): ComponentType<PluginSurfaceProps> {
               hint="How often the row asks the providers for fresh numbers."
               value={String(values.refreshSeconds)}
               options={REFRESH_OPTIONS}
-              onValueChange={(value: string) => save({ refreshSeconds: Number(value) as Preferences["refreshSeconds"] })}
+              onValueChange={(value: string) =>
+                save({ refreshSeconds: Number(value) as Preferences["refreshSeconds"] })
+              }
+            />
+            <SettingsSelect
+              label="Row layout"
+              hint="Detailed gives every provider its own line and every window a number; compact keeps one number per provider."
+              value={values.layout}
+              options={LAYOUT_OPTIONS}
+              onValueChange={(value: string) => save({ layout: value as Preferences["layout"] })}
             />
           </SettingsCard>
         </SettingsSection>

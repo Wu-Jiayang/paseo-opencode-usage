@@ -1,4 +1,5 @@
-import type { UsageReport } from "@getpaseo/plugin/server/usage";
+import type { UsageBalance, UsageReport } from "@getpaseo/plugin/server/usage";
+import { toneFromUsedPct } from "@getpaseo/plugin/server/usage";
 import { fetchCodexUsage } from "./codex.js";
 import { fetchDeepseekUsage } from "./deepseek.js";
 import { fetchMinimaxUsage } from "./minimax.js";
@@ -13,13 +14,6 @@ import type { LiveProvider, LiveUsage } from "../shared/live.js";
 const CACHE_TTL_MS = 10_000;
 
 let cached: { at: number; usage: LiveUsage } | null = null;
-
-interface ProviderBody {
-  status: LiveProvider["status"];
-  detail: string | null;
-  windows: LiveProvider["windows"];
-  balances: LiveProvider["balances"];
-}
 
 interface ProviderSpec {
   id: LiveProvider["id"];
@@ -41,7 +35,7 @@ const PROVIDERS: ProviderSpec[] = [
   },
   {
     id: "minimax",
-    label: "MiniMax Coding Plan",
+    label: "MiniMax",
     integrations: ["minimax-cn-coding-plan", "minimax-coding-plan"],
     fetch: (input, fetchApi, env) => fetchMinimaxUsage(input, fetchApi, env),
   },
@@ -53,35 +47,76 @@ const PROVIDERS: ProviderSpec[] = [
   },
 ];
 
-function emptyBody(status: LiveProvider["status"], detail: string | null): ProviderBody {
-  return { status, detail, windows: [], balances: [] };
+/**
+ * The currency a balance is in. The provider reports the amount, not the
+ * currency, so the name comes from the label it carries.
+ */
+function currencyOf(balance: UsageBalance): string | null {
+  const label = balance.label.toUpperCase();
+  if (label.includes("CNY") || label.includes("¥")) return "CNY";
+  if (label.includes("USD") || label.includes("$")) return "USD";
+  if (balance.unit === "usd") return "USD";
+  return null;
 }
 
-function describe(report: UsageReport): ProviderBody {
-  if (report.status === "error") return emptyBody("error", report.error);
+function describe(report: UsageReport): Pick<
+  LiveProvider,
+  "status" | "detail" | "planLabel" | "windows" | "balances" | "details"
+> {
+  if (report.status === "error") {
+    return {
+      status: "error",
+      detail: report.error,
+      planLabel: null,
+      windows: [],
+      balances: [],
+      details: [],
+    };
+  }
   if (report.status === "unavailable") {
     const problem = report.problem;
-    if (problem.kind === "expired") {
-      return emptyBody("unavailable", `Login expired at ${problem.expiresAt}`);
-    }
-    if (problem.kind === "rejected") {
-      return emptyBody("unavailable", `Login rejected (HTTP ${problem.status})`);
-    }
-    return emptyBody("unavailable", problem.detail);
+    const detail =
+      problem.kind === "expired"
+        ? `Login expired at ${problem.expiresAt}`
+        : problem.kind === "rejected"
+          ? `Login rejected (HTTP ${problem.status})`
+          : problem.detail;
+    return {
+      status: "unavailable",
+      detail,
+      planLabel: null,
+      windows: [],
+      balances: [],
+      details: [],
+    };
   }
   return {
     status: "available",
     detail: null,
+    planLabel: report.planLabel ?? null,
     windows: report.windows.map((window) => ({
       id: window.id,
       label: window.label,
+      shortLabel: window.shortLabel ?? "",
       usedPct: window.usedPct ?? null,
+      remainingPct: window.remainingPct ?? null,
       resetsAt: window.resetsAt ?? null,
+      tone: window.tone ?? toneFromUsedPct(window.usedPct) ?? "default",
     })),
     balances: (report.balances ?? []).map((balance) => ({
+      id: balance.id,
       label: balance.label,
+      used: balance.used ?? null,
       remaining: balance.remaining ?? null,
+      limit: balance.limit ?? null,
       unit: balance.unit,
+      currency: currencyOf(balance),
+      tone: balance.tone ?? "default",
+    })),
+    details: (report.details ?? []).map((detail) => ({
+      id: detail.id,
+      label: detail.label,
+      value: detail.value,
     })),
   };
 }
@@ -102,7 +137,12 @@ async function readProvider(
   return {
     id: spec.id,
     label: spec.label,
-    ...emptyBody("unavailable", "No credential in OpenCode"),
+    status: "unavailable",
+    detail: "No credential in OpenCode",
+    planLabel: null,
+    windows: [],
+    balances: [],
+    details: [],
   };
 }
 

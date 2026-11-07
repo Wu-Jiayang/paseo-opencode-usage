@@ -18,6 +18,12 @@ export const preferences = defineSettings({
       .default(180),
     /** Show the live row in the sidebar footer. */
     showInFooter: z.boolean().default(true),
+    /**
+     * How much the sidebar row shows. The detailed row gives every provider
+     * its own line with every window; the compact row keeps one number per
+     * provider on one line.
+     */
+    layout: z.enum(["detailed", "compact"]).default("detailed"),
   }),
 });
 

@@ -18,7 +18,14 @@ Every source shows up in Settings → Usage as its own card.
 
 The Usage page reads Paseo's own usage report cache, which the daemon holds for five minutes. The plugin also adds a sidebar footer row that polls the providers through its own RPC, so its numbers move faster than that cache.
 
-The row shows the window closest to its limit for each provider, and opens a popover with every window, the reset countdown and the balances. The interval is set in Settings → Plugins → OpenCode usage: 15 seconds, 30 seconds, a minute, three minutes (default), or five minutes. The plugin keeps a ten-second shared reading on the daemon, so several clients polling at once cost one request.
+Two layouts are available in Settings → Plugins → OpenCode usage:
+
+- **Detailed** (default): one line per provider, with the provider name, every window's share, its balance, and a bar under the line for the window closest to its limit.
+- **Compact**: one line for all three providers, with the number closest to a limit for each.
+
+Clicking the row opens a popover with the full picture: a card per provider with the plan, a bar and a percentage for every window, the reset countdown, the balances and the account details, plus a button that refreshes on demand.
+
+The refresh interval is set in the same place: 15 seconds, 30 seconds, a minute, three minutes (default), or five minutes. The plugin keeps a ten-second shared reading on the daemon, so several clients polling at once cost one request.
 
 The Usage page itself keeps Paseo's five-minute cache. Nothing a plugin does can shorten it.
 
@@ -42,7 +49,7 @@ Requires Paseo 0.14 or newer on the daemon, and Node 22.5 or newer for the datab
 
 ```bash
 npm install
-npm test          # vitest, 15 cases
+npm test          # vitest, 21 cases
 npm run typecheck
 ```
 
@@ -66,7 +73,8 @@ server/minimax.ts          MiniMax token plan endpoint
 server/deepseek.ts         DeepSeek balance endpoint
 server/live.ts             the live reading behind the sidebar row
 client/live.tsx            the sidebar row and its popover
-client/settings.tsx        the refresh interval setting
+client/format.ts           the number, money and countdown formatting
+client/settings.tsx        the refresh interval and layout settings
 shared/input.ts            the discovery input schema
 shared/live.ts              the live RPC contract
 shared/preferences.ts       the plugin settings
